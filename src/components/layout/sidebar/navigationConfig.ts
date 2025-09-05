@@ -82,7 +82,7 @@ export const navigationByRole: Record<
   agent: [
     { to: "/", icon: LayoutDashboard, label: "Agent Dashboard" },
     { to: "/leads", icon: UserPlus, label: "Lead Management" },
-    { to: "/schedule", icon: Calendar, label: "My Schedule" },
+    { to: "/myschedule", icon: Calendar, label: "My Schedule" },
     { to: "/visits", icon: Map, label: "Site Visits" },
     { to: "/documents", icon: FileText, label: "Documents" },
     { to: "/commissions", icon: CreditCard, label: "My Commissions" },
