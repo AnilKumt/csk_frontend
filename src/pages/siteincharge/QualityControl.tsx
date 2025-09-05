@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useMemo } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import {
   Dialog,
@@ -181,6 +181,7 @@ const QualityControl = () => {
   const [formData, setFormData] = useState({
     title: "",
     project: "",
+    projectName: "",
     unit: "",
     contractor: "",
     severity: "",
@@ -312,6 +313,7 @@ const QualityControl = () => {
         setFormData({
           title: "",
           project: "",
+          projectName:"",
           unit: "",
           contractor: "",
           severity: "",
@@ -354,42 +356,19 @@ const QualityControl = () => {
     fetchDropdownData();
   }, []);
 
-  const filteredIssues =
-    Array.isArray(qualityIssues) &&
-    qualityIssues.filter((issue) => {
-      // Apply status filter
-      if (filter !== "all" && issue.status !== filter) {
-        return false;
-      }
+  const filteredIssues = useMemo(() => {
+    if (!Array.isArray(qualityIssues)) return [];
 
-      // Apply project filter
-      if (
-        projectFilter &&
-        projectFilter !== "all-projects" &&
-        issue.project !== projectFilter
-      ) {
-        return false;
-      }
+    return qualityIssues.filter((issue) => {
+      // Handle cases where issue.project is null
+      if (!issue.project) return projectFilter === "all-projects";
 
-      // Apply severity filter
-      if (
-        severityFilter &&
-        severityFilter !== "all-severities" &&
-        issue.severity !== severityFilter
-      ) {
-        return false;
-      }
-
-      // Apply search query
-      if (
-        searchQuery &&
-        !issue.title.toLowerCase().includes(searchQuery.toLowerCase())
-      ) {
-        return false;
-      }
-
-      return true;
+      const issueProjectId = issue.project.projectId?._id;
+      console.log("Filtering issue with project ID:", issueProjectId);
+      return projectFilter === "all-projects" || issueProjectId === projectFilter;
+  
     });
+  }, [qualityIssues, projectFilter]);
 
   return (
     <MainLayout>
@@ -471,24 +450,20 @@ const QualityControl = () => {
                 />
               </div>
 
+              {/* FILTER DROPDOWN */}
               <Select value={projectFilter} onValueChange={setProjectFilter}>
                 <SelectTrigger className="w-fit">
                   <div className="flex items-center">
                     <Building className="h-4 w-4 mr-2" />
-                    <span>
-                      {projectFilter === "all-projects" || !projectFilter
-                        ? "All Projects"
-                        : projectFilter}
-                    </span>
+                    {/* Using SelectValue is the recommended way */}
+                    <SelectValue placeholder="Select a project" />
                   </div>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all-projects">All Projects</SelectItem>
                   {projects.map((property) => (
                     <SelectItem key={property._id} value={property._id}>
-                      {typeof property.projectTitle === "string"
-                        ? property.projectTitle
-                        : "Invalid title"}
+                      {property.projectTitle || "Invalid title"}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -540,32 +515,40 @@ const QualityControl = () => {
                     />
                   </div>
 
-                  <div className="grid gap-2">
-                    <Label>Project</Label>
-                    <select
-                      className="w-full border p-2 rounded"
-                      value={formData.project}
-                      onChange={(e) => {
-                        const selectedId = e.target.value;
-                        const project = projects.find(
-                          (p) => p._id === selectedId
-                        );
-                        setFormData({
-                          ...formData,
-                          project: selectedId,
-                          unit: "",
-                        }); // reset unit when project changes
-                        setSelectedProject(project);
-                      }}
-                    >
-                      <option value="">Select Project</option>
-                      {projects.map((proj) => (
-                        <option key={proj._id} value={proj._id}>
-                          {proj.projectTitle || proj.name || "Unnamed Project"}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <select
+                    className="w-full border p-2 rounded"
+                    value={formData.project || ""}
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
+                      const project = projects.find(
+                        (p) => p._id === selectedId
+                      );
+
+                      console.log("Selected Project Object:", project);
+                      console.log(
+                        "Selected Project Name:",
+                        project.projectTitle
+                      );
+
+                      setFormData({
+                        ...formData,
+                        project: selectedId, // keep ID for backend
+                        projectName:
+                          project?.projectTitle ||
+                          project?.name ||
+                          "Unnamed Project", // store name for UI
+                        unit: "",
+                      });
+                      setSelectedProject(project);
+                    }}
+                  >
+                    <option value="">Select Project</option>
+                    {projects.map((proj) => (
+                      <option key={proj._id} value={proj._id}>
+                        {proj.projectTitle || proj.name || "Unnamed Project"}
+                      </option>
+                    ))}
+                  </select>
 
                   <div className="grid gap-2">
                     <Label>Unit</Label>

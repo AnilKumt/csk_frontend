@@ -209,7 +209,7 @@ const MySchedule = () => {
       const clientsRes = await axios.get(
         `${import.meta.env.VITE_URL}/api/user/contractor`,
         { withCredentials: true }
-      ); // Replace with your actual route
+      ); 
       const projectRes = await axios.get(
         `${import.meta.env.VITE_URL}/api/project/projects`,
         { withCredentials: true }

@@ -258,7 +258,6 @@ const ContractorInvoices = () => {
     event?: React.FormEvent
   ) => {
     event?.preventDefault();
-    // Prevent default form submission
     const amount = data.quantity * data.rate;
 
     const newItem: InvoiceItem = {

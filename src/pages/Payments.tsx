@@ -193,6 +193,8 @@ const Payments = () => {
     }
   };
 
+  
+
   const currentRange: DateRange | undefined = dateFilters.startDate
     ? {
         from: dateFilters.startDate,
@@ -235,7 +237,7 @@ const Payments = () => {
       const res = await axios.get(
         `${import.meta.env.VITE_URL}/api/payments/accountant`,
         {
-          withCredentials: true, // if using cookies/auth
+          withCredentials: true,
         }
       );
       setPayments(res.data);
@@ -292,6 +294,29 @@ const Payments = () => {
     });
 
     saveAs(fileData, "Payments.xlsx");
+  };
+
+  const markInvoiceAsPaid = async (
+    invoiceId: string,
+    paymentMethod: string
+  ) => {
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_URL}/api/payments`,
+        {
+          invoiceId,
+          paymentMethod,
+        },
+        { withCredentials: true }
+      );
+      fetchPayments();
+      return res.data;
+    } catch (error: any) {
+      console.error("❌ Error marking invoice as paid:", error);
+      throw new Error(
+        error.response?.data?.message || "Error marking invoice as paid"
+      );
+    }
   };
 
   return (
@@ -993,10 +1018,23 @@ const Payments = () => {
                     Cancel
                   </Button>
                   <Button
-                    onClick={() => {
-                      setShowPaymentDialog(false);
+                    onClick={async () => {
+                      try {
+                        const data = await markInvoiceAsPaid(
+                          selectedInvoiceId,
+                          paymentMethod
+                        );
+                        console.log("✅ Payment Success:", data);
+
+                      
+                        setSelectedInvoiceId("");
+                        setPaymentMethod("");
+                        setShowPaymentDialog(false);
+                      } catch (err: any) {
+                        alert(err.message);
+                      }
                     }}
-                    disabled={!paymentMethod && selectedInvoiceId != ""}
+                    disabled={!paymentMethod || !selectedInvoiceId}
                   >
                     Mark as Paid
                   </Button>
